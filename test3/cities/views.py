@@ -1,11 +1,11 @@
-import urllib3
+import urllib2
+from urllib2 import HTTPError, URLError
 import json
 from itertools import izip_longest
+from operator import itemgetter
+from time import sleep
 
 from django.shortcuts import render
-from django.http import HttpResponse
-from django.template import RequestContext, loader
-
 
 def index(request):
     city_names = []
@@ -14,27 +14,41 @@ def index(request):
         for city_name in _format_metro_areas_to_city_names(line.strip()):
             city_names += [city_name]
         
-    temps = self._get_city_temps(city_names)
+    temps = _get_city_temps(city_names)
+    
+    top_5_city_temps = sorted(temps.iteritems(), key=itemgetter(1), reverse=True)[:5]
+    top_5_city_temps = [(city_name, 1.8*(temp - 273) + 32) for city_name, temp in top_5_city_temps]
+    #print top_5_city_temps
 
-    template = loader.get_template('cities/index.html')
-    context = RequestContext(request, {
-            'cities': [],
-            'temps': []
-        })
-    return HttpResponse(render(context))
+    context = {
+        'top_5_city_temps': top_5_city_temps
+        }
+
+    return render(request,
+                  'index.html', 
+                  context)
 
 
 def _get_city_temps(city_names):
     temps = {}
-    for city_name in city_names:
-        city_name = _format_city_name(city_name)
-        resp = urllib3.urlopen('http://api.openweathermap.org/data/2.5/weather?q=%s' % city_name)
+    for i, city_name in enumerate(city_names):
+        _city_name = _format_city_name(city_name)
+        try:
+            resp = urllib2.urlopen('http://api.openweathermap.org/data/2.5/weather?q=%s' % _city_name)
+        except (HTTPError, URLError) as e:
+            sleep(.5)
+            continue
+        except Exception as e:
+            print "Warning, could not get data for %s: %s" % (city_name, e.message)
+            sleep(.5)
+            continue
         
         resp_json = json.loads(resp.read())
-        temps[city_name] = float(resp_json.get("main", {"temp": 295.4}).get("temp"))
-        break
+        temps[city_name] = float(resp_json.get("main", {"temp": 295.4}).get("temp")) # 72 degrees F
+        #print i, city_name, temps[city_name]
 
     return temps
+
 
 def _format_city_name(city_name):
     return city_name.replace(' ', '%20')

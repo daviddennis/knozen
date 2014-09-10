@@ -1,8 +1,19 @@
 <html>
   <head>
     <title>City Temperatures</title>
+    <style>
+      body {
+      font-family: monospace;
+      }
+    </style>
   </head>
   <body>
-    
+    <h2>Top 5 City Temperatures</h2>
+    {% for city_name, temp in top_5_city_temps %}
+    {{ forloop.counter }}. {{ city_name }} {{ temp }}<br></br>
+    {% endfor %}
+    <form action="/" method="GET">
+      <input type="submit" value="Recalculate"></input>
+    </form>
   </body>
 </html>

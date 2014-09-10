@@ -27,6 +27,10 @@ TEMPLATE_DEBUG = True
 ALLOWED_HOSTS = []
 
 
+TEMPLATE_DIRS = (
+    "/Users/admin/Code/companies/knozen/test3/cities",
+)
+
 # Application definition
 
 INSTALLED_APPS = (

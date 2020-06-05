@@ -1,4 +1,4 @@
 us==0.8.0
-django==1.6.5
+django==1.11.29
 urllib3==1.9
 iterutils==0.1.6
